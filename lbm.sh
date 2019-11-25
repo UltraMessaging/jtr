@@ -1,4 +1,3 @@
-# source this file
 # lbm.sh
 # 1. Replace the RELPATH and PLATFORM lines with your own values.
 # 2. Create lbm.lic with your license information:
@@ -8,7 +7,8 @@ RELPATH=$HOME/UMP_6.12
 PLATFORM=Linux-glibc-2.17-x86_64
 
 # Source the file that defines env var for license key.
-. lbm.lic
+export LBM_LICENSE_FILENAME
+LBM_LICENSE_FILENAME=lbm.lic
 
 export LBM_BASE TARGET_PLATFORM LBM_PLATFORM
 LBM_BASE=$RELPATH
