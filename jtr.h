@@ -84,6 +84,7 @@ extern char jtr_results_buf[65536];
 } while (0)
 
 void jtr_pin_cpu(int cpu_num);
+void jtr_set_fifo_priority(int priority);
 void jtr_spin_sleep_ns(long long sleep_ns);
 void jtr_calibrate();
 void jtr_histo_init();

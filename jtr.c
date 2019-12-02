@@ -57,12 +57,21 @@ char jtr_results_buf[65536];
 void jtr_pin_cpu(int cpu_num)
 {
   cpu_set_t cpu_set;
-  int e;
 
   memset(&cpu_set, 0, sizeof(cpu_set));
   CPU_SET(cpu_num, &cpu_set);
   SYSE(sched_setaffinity(getpid(), sizeof(cpu_set), &cpu_set));
 }  /* jtr_pin_cpu */
+
+
+void jtr_set_fifo_priority(int priority)
+{
+  struct sched_param sched_parameter;
+
+  memset(&sched_parameter, 0, sizeof(sched_parameter));
+  sched_parameter.sched_priority = priority;
+  SYSE(sched_setscheduler(0, SCHED_FIFO, &sched_parameter));
+}  /* jtr_set_fifo_priority */
 
 
 /* Use busy looping to delay short periods of time. Resolution is limited

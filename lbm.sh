@@ -3,7 +3,7 @@
 # 2. Create lbm.lic with your license information:
 # export LBM_LICENSE_INFO="..."
 
-RELPATH=$HOME/UMP_6.12
+RELPATH=$HOME/UMP_6.12.1
 PLATFORM=Linux-glibc-2.17-x86_64
 
 # Source the file that defines env var for license key.

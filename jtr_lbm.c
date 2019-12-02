@@ -21,9 +21,6 @@
  */
 
 /* Allow setting thread affinity. */
-#define _GNU_SOURCE
-#include <sched.h>
-
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -42,6 +39,7 @@
 
 /* Options and their defaults. See jtr_getopts(). */
 int opt_cpu_num = 3;
+int opt_fifo_priority = -1;
 int opt_loops = 3;
 int opt_msg_size = 1024;
 int opt_num_msgs = 1000000;
@@ -63,7 +61,7 @@ int jtr_no_send_spin = 0;
 
 void usage()
 {
-  fprintf(stderr, "Usage: jtr_lbm [-c cpu_num] [-l loops] [-m msg_size] [-n num_msgs] [-p pkt_delay] [-w warmup_loops] [-v]\n");
+  fprintf(stderr, "Usage: jtr_lbm [-c cpu_num] [-f fifo_priority] [-l loops] [-m msg_size] [-n num_msgs] [-p pkt_delay] [-w warmup_loops] [-v]\n");
   exit(1);
 }  /* usage */
 
@@ -74,15 +72,16 @@ void jtr_getopts(int argc, char **argv)
 {
   int opt;
 
-  while ((opt = getopt(argc, argv, "c:l:m:n:p:w:v")) != EOF) {
+  while ((opt = getopt(argc, argv, "c:l:m:n:p:w:v:")) != EOF) {
     switch (opt) {
       case 'c': opt_cpu_num = atoi(optarg); break;
+      case 'f': opt_fifo_priority = atoi(optarg); break;
       case 'l': opt_loops = atoi(optarg); break;
       case 'm': opt_msg_size = atoi(optarg); break;
       case 'n': opt_num_msgs = atoi(optarg); break;
       case 'p': opt_pkt_delay = atoi(optarg); break;
       case 'w': opt_warmup_loops = atoi(optarg); break;
-      case 'v': opt_verbose = 1; break;
+      case 'v': opt_verbose = atoi(optarg); break;
       default: usage();
     }  /* switch opt */
   }  /* while getopt */
@@ -136,6 +135,10 @@ int main(int argc, char **argv)
 
   if (opt_cpu_num >= 0) {
     jtr_pin_cpu(opt_cpu_num);
+  }
+
+  if (opt_fifo_priority >= 0) { 
+    jtr_set_fifo_priority(opt_fifo_priority);
   }
 
   LBME(lbm_config(JTR_CFG_FILE));
@@ -197,7 +200,9 @@ int main(int argc, char **argv)
     jtr_histo_print_all(opt_verbose);
   }
 
-  printf("%s", jtr_results_buf);
+  if (opt_verbose >= 0) {
+    printf("%s", jtr_results_buf);
+  }
 
   LBME(lbm_ssrc_delete(jtr_ssrc));
 
