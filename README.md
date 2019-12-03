@@ -57,8 +57,8 @@ as a system package.
 For example, assuming your 6.12.1 package is in /tmp:
 ```
 sudo cd /usr/local; /tmp/UMP_6.12.1_Linux-glibc-2.17-x86_64.sh
-echo "/usr/local/UMP_6.12.1/Linux-glibc-2.17-x86_64/lib" >/etc/ld.so.conf.d/lbm.conf
-ldconfig
+sudo echo "/usr/local/UMP_6.12.1/Linux-glibc-2.17-x86_64/lib" >/etc/ld.so.conf.d/lbm.conf
+sudo ldconfig
 ```
 
 ## Initial Tests
