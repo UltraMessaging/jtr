@@ -166,16 +166,16 @@ void jtr_histo_accum(int sample_time)
   int bucket;
 
   bucket = sample_time / HISTO_GRANULARITY;
-  if (bucket < HISTO_BUCKETS) {
+  if (likely(bucket < HISTO_BUCKETS)) {
     jtr_histo[bucket] ++;
   } else {
     jtr_histo_overflows ++;
   }
 
-  if (sample_time < jtr_histo_min_time) {
+  if (unlikely(sample_time < jtr_histo_min_time)) {
     jtr_histo_min_time = sample_time;
   }
-  if (sample_time > jtr_histo_max_time) {
+  if (unlikely(sample_time > jtr_histo_max_time)) {
     jtr_histo_max_time = sample_time;
   }
 
@@ -288,11 +288,11 @@ void jtr_measure_calls(int warmup_loops, int measure_loops, int post_call_wait_n
 
   /* Use negative values for "i" as warm-up loops. */
   for (i = -warmup_loops; i < measure_loops; i++) {
-    SYSE(clock_gettime(CLOCK_MONOTONIC, &start_call_ts));
+    clock_gettime(CLOCK_MONOTONIC, &start_call_ts);
     app_cb(clientd);
-    SYSE(clock_gettime(CLOCK_MONOTONIC, &end_call_ts));
+    clock_gettime(CLOCK_MONOTONIC, &end_call_ts);
 
-    if (post_call_wait_ns >= 0) {
+    if (likely(post_call_wait_ns >= 0)) {
       jtr_spin_sleep_ns(post_call_wait_ns);
     } else {
       usleep(-post_call_wait_ns/1000);
@@ -304,11 +304,11 @@ void jtr_measure_calls(int warmup_loops, int measure_loops, int post_call_wait_n
                   + (long long)end_call_ts.tv_nsec;
     call_ns = end_call_ns - start_call_ns;
     call_ns -= jtr_gettime_cost;  /* Correct for cost of timestamp. */
-    if (call_ns < 0) {
+    if (unlikely(call_ns < 0)) {
       call_ns = 0;
     }
 
-    if (i >= 0) {  /* Only accumulate results if past warmup period. */
+    if (likely(i >= 0)) {  /* Only accumulate results if past warmup period. */
       jtr_histo_accum(call_ns);
     }  /* if i >= 0 */
   }

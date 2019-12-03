@@ -24,6 +24,9 @@
 #define JTR_H
 #include <errno.h>
 
+#define likely(x)       __builtin_expect((x),1)
+#define unlikely(x)     __builtin_expect((x),0)
+
 /* 10G runs at .8 ns per byte.
  * Enet frame has 38 bytes of overhead (includes interpacket gap).
  * An ipv4 UDP packet has 20 bytes IP header and 8 bytes of udp header.
