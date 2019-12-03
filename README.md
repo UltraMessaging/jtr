@@ -44,6 +44,22 @@ installation of UM.
 that will not interfere with your network.
 See [IMPORTANT WARNING](important-warning).
 * Build the tools by running "bld.sh".
+* To test setting FIFO priority to high values (like 99), you can
+change ownership of the resulting executable files to root and
+set the "suid" bit:
+```
+sudo chown 0:0 jtr_null jtr_sock jtr_lbm
+sudo chmod u+s jtr_null jtr_sock jtr_lbm
+```
+This changes the process to root as it executes the program.
+But to run the jtr_lbm as root will require installing UM itself
+as a system package.
+For example, assuming your 6.12.1 package is in /tmp:
+```
+sudo cd /usr/local; /tmp/UMP_6.12.1_Linux-glibc-2.17-x86_64.sh
+echo "/usr/local/UMP_6.12.1/Linux-glibc-2.17-x86_64/lib" >/etc/ld.so.conf.d/lbm.conf
+ldconfig
+```
 
 ## Initial Tests
 
@@ -80,19 +96,20 @@ for (i = 0; i < 100; i++) {}
 On a system tuned for low jitter, that 100 cycle loop should execute for the
 same amount of time each of the million times it is called.
 We include some results from our system named "Crush",
-which is *not* tuned for low jitter.
+which is partially tuned for low jitter, but there is more we could do.
 
 Here's an example result (first of three) from our machine "Crush":
 ```
 $ ./tst_null.sh
 tst_null.sh 
-Busy_spins=100, cpu_num=3, msg_size=1024, num_msgs=1000000, pkt_delay=898 warmup_loops=500, gettime_cost=15, jtr_1000_loops_cost=1680
-Minimum=171, Maximum=2762, Average=197, Overflows=0
-90.000% are below 210 ns
-99.000% are below 210 ns
-99.900% are below 210 ns
-99.990% are below 310 ns
-99.999% are below 770 ns
+tst_null.sh 
+Busy_spins=100, fifo_priority=-1, cpu_num=3, msg_size=1024, num_msgs=1000000, pkt_delay=898 warmup_loops=500, gettime_cost=15, jtr_1000_loops_cost=1680
+Minimum=170, Maximum=1219, Average=173, Overflows=0
+90.000% are below 180 ns
+99.000% are below 180 ns
+99.900% are below 180 ns
+99.990% are below 280 ns
+99.999% are below 600 ns
 ```
 
 Interesting measurements are:

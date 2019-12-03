@@ -113,9 +113,9 @@ void jtr_calibrate()
   long long difference_ns;
 
   /* How long does a clock_gettime() take? */
-  SYSE(clock_gettime(CLOCK_MONOTONIC, &start_ts));
+  clock_gettime(CLOCK_MONOTONIC, &start_ts);
   for (i = 0; i < 1000; i++) {
-    SYSE(clock_gettime(CLOCK_MONOTONIC, &end_ts));
+    clock_gettime(CLOCK_MONOTONIC, &end_ts);
   }
   start_ns = ((long long)start_ts.tv_sec * NANOS_PER_SEC)
              + (long long)start_ts.tv_nsec;
@@ -127,10 +127,10 @@ void jtr_calibrate()
   }
 
   /* How many busy loops in a ns? */
-  SYSE(clock_gettime(CLOCK_MONOTONIC, &start_ts));
+  clock_gettime(CLOCK_MONOTONIC, &start_ts);
   for (i = 0; i < 1000; i++) {
   }
-  SYSE(clock_gettime(CLOCK_MONOTONIC, &end_ts));
+  clock_gettime(CLOCK_MONOTONIC, &end_ts);
   start_ns = ((long long)start_ts.tv_sec * NANOS_PER_SEC)
              + (long long)start_ts.tv_nsec;
   end_ns = ((long long)end_ts.tv_sec * NANOS_PER_SEC)

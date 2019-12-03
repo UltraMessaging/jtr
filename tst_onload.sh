@@ -3,8 +3,6 @@
 
 . ./lbm.sh
 
-cp streaming.cfg lbm.cfg
-
 # Meta-config that sets lots of Onload settings to spin
 #export EF_POLL_USEC=-1
 export EF_SPIN_USEC=-1
@@ -23,5 +21,5 @@ if [ -n "$NETWORK" ]; then :
   I=`ifconfig | sed -n "/$NETWORK/s/ *inet \([0-9.]*\) .*/\1/p"`
 fi
 
-echo "tst_sock.sh -D $D -G $G -I $I -T $T $*"
+echo "tst_onload.sh -D $D -G $G -I $I -T $T $*"
 onload -v ./jtr_sock -D $D -G $G -I $I -T $T $*

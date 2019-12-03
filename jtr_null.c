@@ -105,8 +105,8 @@ int main(int argc, char **argv)
 
   snprintf(&jtr_results_buf[strlen(jtr_results_buf)],
            sizeof(jtr_results_buf),
-           "Busy_spins=%d, cpu_num=%d, msg_size=%d, num_msgs=%d, pkt_delay=%d warmup_loops=%d, gettime_cost=%lld, jtr_1000_loops_cost=%lld\n",
-           opt_Busy_spins, opt_cpu_num, opt_msg_size, opt_num_msgs, opt_pkt_delay, opt_warmup_loops, jtr_gettime_cost, jtr_1000_loops_cost);
+           "Busy_spins=%d, fifo_priority=%d, cpu_num=%d, msg_size=%d, num_msgs=%d, pkt_delay=%d warmup_loops=%d, gettime_cost=%lld, jtr_1000_loops_cost=%lld\n",
+           opt_Busy_spins, opt_fifo_priority, opt_cpu_num, opt_msg_size, opt_num_msgs, opt_pkt_delay, opt_warmup_loops, jtr_gettime_cost, jtr_1000_loops_cost);
   SYSE(jtr_results_buf[sizeof(jtr_results_buf)-2] != '\0'); /* Mustn't be full. */
 
   /* Conduct the timing tests! */

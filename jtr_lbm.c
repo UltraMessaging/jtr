@@ -72,7 +72,7 @@ void jtr_getopts(int argc, char **argv)
 {
   int opt;
 
-  while ((opt = getopt(argc, argv, "c:l:m:n:p:w:v:")) != EOF) {
+  while ((opt = getopt(argc, argv, "c:f:l:m:n:p:w:v:")) != EOF) {
     switch (opt) {
       case 'c': opt_cpu_num = atoi(optarg); break;
       case 'f': opt_fifo_priority = atoi(optarg); break;
@@ -172,8 +172,8 @@ int main(int argc, char **argv)
 
   snprintf(&jtr_results_buf[strlen(jtr_results_buf)],
            sizeof(jtr_results_buf),
-           "cpu_num=%d, msg_size=%d, num_msgs=%d, pkt_delay=%d warmup_loops=%d, gettime_cost=%lld, jtr_1000_loops_cost=%lld\n",
-           opt_cpu_num, opt_msg_size, opt_num_msgs, opt_pkt_delay, opt_warmup_loops, jtr_gettime_cost, jtr_1000_loops_cost);
+           "cpu_num=%d, fifo_priority=%d, msg_size=%d, num_msgs=%d, pkt_delay=%d warmup_loops=%d, gettime_cost=%lld, jtr_1000_loops_cost=%lld\n",
+           opt_cpu_num, opt_fifo_priority, opt_msg_size, opt_num_msgs, opt_pkt_delay, opt_warmup_loops, jtr_gettime_cost, jtr_1000_loops_cost);
   SYSE(jtr_results_buf[sizeof(jtr_results_buf)-2] != '\0'); /* Mustn't be full. */
 
   /* Conduct the timing tests! */

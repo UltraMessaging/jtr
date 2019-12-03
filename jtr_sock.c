@@ -41,6 +41,7 @@
 
 /* Options and their defaults. See jtr_getopts(). */
 int opt_cpu_num = 3;
+int opt_fifo_priority = -1;
 int opt_loops = 3;
 int opt_msg_size = 1024;
 int opt_num_msgs = 1000000;
@@ -77,7 +78,7 @@ void jtr_getopts(int argc, char **argv)
 {
   int opt;
 
-  while ((opt = getopt(argc, argv, "D:G:I:T:c:l:m:n:p:w:v")) != EOF) {
+  while ((opt = getopt(argc, argv, "D:G:I:T:c:f:l:m:n:p:w:v")) != EOF) {
     switch (opt) {
       case 'D': opt_Destport = atoi(optarg); break;
       case 'G': opt_Groupaddr = inet_addr(optarg);
@@ -94,6 +95,7 @@ void jtr_getopts(int argc, char **argv)
         break;
       case 'T': opt_Ttl = atoi(optarg); break;
       case 'c': opt_cpu_num = atoi(optarg); break;
+      case 'f': opt_fifo_priority = atoi(optarg); break;
       case 'l': opt_loops = atoi(optarg); break;
       case 'm': opt_msg_size = atoi(optarg); break;
       case 'n': opt_num_msgs = atoi(optarg); break;
@@ -158,6 +160,10 @@ int main(int argc, char **argv)
     jtr_pin_cpu(opt_cpu_num);
   }
 
+  if (opt_fifo_priority >= 0) { 
+    jtr_set_fifo_priority(opt_fifo_priority);
+  }
+
   /* Get message buffer into cache. */
   for (i = 0; i < opt_msg_size; i++) {
     jtr_ss_msg_buf[i] = (char)i;
@@ -169,8 +175,8 @@ int main(int argc, char **argv)
 
   snprintf(&jtr_results_buf[strlen(jtr_results_buf)],
            sizeof(jtr_results_buf),
-           "cpu_num=%d, msg_size=%d, num_msgs=%d, pkt_delay=%d warmup_loops=%d, gettime_cost=%lld, jtr_1000_loops_cost=%lld\n",
-           opt_cpu_num, opt_msg_size, opt_num_msgs, opt_pkt_delay, opt_warmup_loops, jtr_gettime_cost, jtr_1000_loops_cost);
+           "cpu_num=%d, fifo_priority=%d, msg_size=%d, num_msgs=%d, pkt_delay=%d warmup_loops=%d, gettime_cost=%lld, jtr_1000_loops_cost=%lld\n",
+           opt_cpu_num, opt_fifo_priority, opt_msg_size, opt_num_msgs, opt_pkt_delay, opt_warmup_loops, jtr_gettime_cost, jtr_1000_loops_cost);
   SYSE(jtr_results_buf[sizeof(jtr_results_buf)-2] != '\0'); /* Mustn't be full. */
 
   /* Conduct the timing tests! */
