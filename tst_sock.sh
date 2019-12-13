@@ -16,5 +16,5 @@ if [ -n "$NETWORK" ]; then :
   I=`ifconfig | sed -n "/$NETWORK/s/ *inet \([0-9.]*\) .*/\1/p"`
 fi
 
-echo "tst_sock.sh -D $D -G $G -I $I -T $T $*"
-./jtr_sock -D $D -G $G -I $I -T $T $*
+# -h 1500 expands histogram.
+./jtr_sock -d "tst_sock.sh" -D $D -G $G -I $I -T $T -h 1500 -g tst_sock.gp $* >tst_sock.txt

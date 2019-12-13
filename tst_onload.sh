@@ -21,5 +21,5 @@ if [ -n "$NETWORK" ]; then :
   I=`ifconfig | sed -n "/$NETWORK/s/ *inet \([0-9.]*\) .*/\1/p"`
 fi
 
-echo "tst_onload.sh -D $D -G $G -I $I -T $T $*"
-onload -v ./jtr_sock -D $D -G $G -I $I -T $T $*
+# -h 1000 expands histogram.
+onload ./jtr_sock -d "tst_onload.sh" -D $D -G $G -I $I -T $T -h 1000 -g tst_onload.gp $* >tst_onload.txt

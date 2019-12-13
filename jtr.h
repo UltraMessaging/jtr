@@ -23,6 +23,7 @@
 #ifndef JTR_H
 #define JTR_H
 #include <errno.h>
+#include <inttypes.h>
 
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
@@ -37,6 +38,12 @@
  */
 #define JTR_10G_XMIT_1024_PKT_NS 898  /* Time for NIC to send 1K LBM msg. */
 
+/* Macro to sample the RDTSC register. */
+#define RDTSC(hi, lo) do { \
+  asm volatile ("rdtsc" : "=a" (lo), "=d" (hi)); \
+} while (0)
+
+/* Convenience constant so I don't accidentally miscount zeros. */
 #define NANOS_PER_SEC 1000000000ll  /* Long long constant for 10**9. */
 
 typedef void (*app_cb_t)(void *clientd);
@@ -45,20 +52,26 @@ typedef void (*app_cb_t)(void *clientd);
  * the jtr_calibrate() function will reduce them to the minimum measurement.
  */
 extern long long jtr_gettime_cost;
+extern long long jtr_rdtsc_cost;
 extern long long jtr_1000_loops_cost;
+extern long long jtr_ticks_per_sec;  /* RDTSC ticks per second. */
 
 /* Histogram, in HISTO_GRANULARITY ns increments. */
-#define HISTO_BUCKETS 900     /* Histogram number of bars. */
 #define HISTO_GRANULARITY 10  /* Histogram ns per bucket. */
-extern int jtr_histo[HISTO_BUCKETS];
+extern int jtr_histo_num_buckets;
+extern int *jtr_histo_buckets;
 extern int jtr_histo_overflows;
 extern int jtr_histo_max_time;
 extern int jtr_histo_min_time;
 extern long long jtr_histo_tot_time;
 extern int jtr_histo_num_samples;
 extern int jtr_histo_average;
+extern int jtr_x_low;
+extern int jtr_x_high;
+extern int jtr_y_high;
 
 extern char jtr_results_buf[65536];
+extern char jtr_gnuplot_buf[65536];
 
 /* Very simplistic error handling macro for LBM functions.  Pass in return
  * value. Tests for error, prints error, and aborts (core dump). */
@@ -88,16 +101,17 @@ extern char jtr_results_buf[65536];
 
 void jtr_pin_cpu(int cpu_num);
 void jtr_set_fifo_priority(int priority);
-void jtr_spin_sleep_ns(long long sleep_ns);
-void jtr_calibrate();
-void jtr_histo_init();
+void jtr_spin_sleep_ns(long long sleep_ns, int timebase);
+void jtr_calibrate(void);
+void jtr_histo_init(int num_buckets);
 void jtr_histo_accum(int sample_time);
-void jtr_histo_print_summary();
+void jtr_histo_print_summary(void);
 void jtr_histo_print_perc(double percentile);
-void jtr_histo_print_details();
-void jtr_histo_print_all(int verbose);
+void jtr_histo_print_details(void);
+void jtr_histo_print_all(int verbose, char *title);
 int jtr_busy_loop_wait_count(long long wait_ns);
-void jtr_measure_calls(int warmup_loops, int measure_loops, int post_call_wait_ns,
+void jtr_measure_calls(int warmup_loops, int measure_loops,
+                       int post_call_wait_ns, int timebase,
                        app_cb_t app_cb, void *clientd);
 
 #endif  /* JTR_H */

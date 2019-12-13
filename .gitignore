@@ -1,6 +1,13 @@
 # UM-specific overhead files
 labbox.sh
 lbm.lic
+*.png
+*.gp
+*.txt
+x
+x.*
+*.x
+~*
 
 # Prerequisites
 *.d

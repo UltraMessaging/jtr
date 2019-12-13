@@ -5,5 +5,5 @@
 
 cp streaming.cfg lbm.cfg
 
-echo "tst_lbmsock.sh $*"
-./jtr_lbm $*
+# -h 1500 expands histogram.
+./jtr_lbm -d "tst_lbmsock.sh" -h 1500 -g tst_lbmsock.gp $* >tst_lbmsock.txt

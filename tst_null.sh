@@ -3,5 +3,4 @@
 
 . ./lbm.sh
 
-echo "tst_null.sh $*"
-./jtr_null $*
+./jtr_null -d "tst_null.sh" -h 200 -g tst_null.gp $* >tst_null.txt

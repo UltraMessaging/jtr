@@ -10,5 +10,5 @@ cp streaming.cfg lbm.cfg
 export EF_SPIN_USEC=-1
 export EF_UDP_SEND_SPIN=1
 
-echo "tst_lbmonload.sh $*"
-onload -v ./jtr_lbm $*
+# -h 1000 expands histogram.
+onload ./jtr_lbm -d "tst_lbmonload.sh" -h 1000 -g tst_lbmonload.gp $* >tst_lbmonload.txt
