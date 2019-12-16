@@ -320,7 +320,7 @@ void jtr_histo_print_perc(double percentile)
   } else {
     snprintf(&jtr_results_buf[strlen(jtr_results_buf)],
              sizeof(jtr_results_buf) - strlen(jtr_results_buf),
-             "Warning, historgram overflow for %6.3lf%% (too many samples >= %d)\n",
+             "Warning, histogram overflow for %6.3lf%% (too many samples >= %d)\n",
              percentile,
              jtr_histo_num_buckets * HISTO_GRANULARITY);
     SYSE(jtr_results_buf[sizeof(jtr_results_buf)-2] != '\0'); /* Don't fill. */

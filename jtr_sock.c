@@ -46,10 +46,10 @@ int opt_fifo_priority = -1;
 char *opt_gnuplot_file = NULL;
 int opt_histo_buckets = 800;
 int opt_loops = 3;
-int opt_num_samples = 1000000;
+int opt_num_samples = 2000000;
 int opt_pause = JTR_10G_XMIT_1024_PKT_NS;
 int opt_timebase = 1;  /* 1=RDTSC, 2=clock_gettime() */
-int opt_warmup_loops = 500;
+int opt_warmup_loops = 1500;
 int opt_verbose = 0;
 
 /* Options specific to the sock test. */

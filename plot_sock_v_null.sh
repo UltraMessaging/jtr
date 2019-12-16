@@ -8,7 +8,7 @@ set term png size 1200,960
 set output "plot_sock_v_null-1.png"
 set xlabel "Historgram bucket (ns)"
 set ylabel "Bucket count (log)"
-set yrange [0.5:1000000]
+set yrange [0.5:2000000]
 set logscale y
 set mxtics 4
 load "< sed -n <tst_sock.gp '/^#/s/^# *//p'"
@@ -24,7 +24,7 @@ set term png size 1200,960
 set output "plot_sock_v_null-2.png"
 set xlabel "Historgram bucket (ns)"
 set ylabel "Bucket count (log)"
-set yrange [0.5:1000000]
+set yrange [0.5:2000000]
 set logscale y
 set mxtics 4
 load "< sed -n <tst_sock.gp '/^#/s/^# *//p'"
@@ -40,7 +40,7 @@ set term png size 1200,960
 set output "plot_sock_v_null-3.png"
 set xlabel "Historgram bucket (ns)"
 set ylabel "Bucket count (log)"
-set yrange [0.5:1000000]
+set yrange [0.5:2000000]
 set logscale y
 set mxtics 4
 load "< sed -n <tst_sock.gp '/^#/s/^# *//p'"
