@@ -99,6 +99,18 @@ extern char jtr_gnuplot_buf[65536];
   }\
 } while (0)
 
+/* Very simplistic error handling macro for internal error checking.
+ * Pass in a condition that must be true. If false, prints, and aborts. */
+#define ASSRT(_cond) do {\
+  int _e = _cond;\
+  if (! _e) {\
+    fprintf(stderr, "ASSRT: failed at %s:%d %s\n",\
+            __FILE__, __LINE__, #_cond);\
+    fflush(stderr);\
+    abort();\
+  }\
+} while (0)
+
 void jtr_pin_cpu(int cpu_num);
 void jtr_set_fifo_priority(int priority);
 void jtr_spin_sleep_ns(long long sleep_ns, int timebase);
@@ -110,6 +122,8 @@ void jtr_histo_print_perc(double percentile);
 void jtr_histo_print_details(void);
 void jtr_histo_print_all(int verbose, char *title);
 int jtr_busy_loop_wait_count(long long wait_ns);
+void jtr_measure_one(int timebase, int accum,
+                     app_cb_t app_cb, void *clientd);
 void jtr_measure_calls(int warmup_loops, int measure_loops,
                        int post_call_wait_ns, int timebase,
                        app_cb_t app_cb, void *clientd);

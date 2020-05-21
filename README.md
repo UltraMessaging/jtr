@@ -82,7 +82,7 @@ The difference between end and start times is a sample,
 which is added to a histogram.
 
 The program's test thread pins itself to a core using "pthread\_setaffinity\_np()".
-(This is basically the same thing that happens when you run with "taskset".)
+(This similar to what happens when you run with "taskset".)
 By default it chooses core number 5, and is controlled with the "-c" option.
 (You can also inhibit pinning by specifying core number "-1" using
 "-c -1".

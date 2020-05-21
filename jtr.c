@@ -34,6 +34,13 @@
 #include <sys/time.h>
 #include "jtr.h"
 
+long long sum_a1;
+long long sum_a2;
+long long sum_a3;
+long long sum_a4;
+long long sum_hooks;
+int jtr_neg_diffs;
+
 /* Time the host takes to do various things. Start them at maximum value;
  * the jtr_calibrate() function will reduce them to the minimum measurement.
  */
@@ -64,7 +71,8 @@ void jtr_pin_cpu(int cpu_num)
 
   memset(&cpu_set, 0, sizeof(cpu_set));
   CPU_SET(cpu_num, &cpu_set);
-  SYSE(sched_setaffinity(getpid(), sizeof(cpu_set), &cpu_set));
+  /*SYSE(sched_setaffinity(getpid(), sizeof(cpu_set), &cpu_set));*/
+  SYSE(pthread_setaffinity_np(pthread_self(), sizeof(cpu_set), &cpu_set));
 }  /* jtr_pin_cpu */
 
 
@@ -87,24 +95,25 @@ void jtr_spin_sleep_ns(long long sleep_ns, int timebase)
 {
   uint32_t start_ticks_hi, start_ticks_lo;
   uint32_t cur_ticks_hi, cur_ticks_lo;
-  long long start_ticks;
+  long long end_ticks;
   long long cur_ticks;
   struct timespec ts;  /* tv_sec, tv_nsec */
   long long end_ns;
   long long cur_ns;
-    
+ 
   if (sleep_ns <= 0) {
     return;
   }
 
   if (likely(timebase == 1)) {
     RDTSC(start_ticks_hi, start_ticks_lo);
-    start_ticks = ((long long)start_ticks_hi << 32) + (long long)start_ticks_lo;
-    
+    end_ticks = ((long long)start_ticks_hi << 32) + (long long)start_ticks_lo
+      + ((sleep_ns * jtr_ticks_per_sec) / 1000000000ll);
+
     do {
       RDTSC(cur_ticks_hi, cur_ticks_lo);
       cur_ticks = ((long long)cur_ticks_hi << 32) + (long long)cur_ticks_lo;
-    } while (cur_ticks < start_ticks);
+    } while (cur_ticks < end_ticks);
   }  /* timebase == 1 */
   else {
     if (sleep_ns > 2*jtr_gettime_cost) {
@@ -247,6 +256,13 @@ void jtr_histo_init(int num_buckets)
     jtr_histo_buckets[i] = 0;
   }
 
+   sum_a1 = 0;
+   sum_a2 = 0;
+   sum_a3 = 0;
+   sum_a4 = 0;
+   sum_hooks = 0;
+   jtr_neg_diffs = 0;
+
   jtr_histo_overflows = 0;
   jtr_histo_min_time = 0x7fffffff;
   jtr_histo_max_time = 0;
@@ -262,6 +278,7 @@ void jtr_histo_accum(int sample_time)
 {
   int bucket;
 
+  SYSE(sample_time < 0);
   bucket = sample_time / HISTO_GRANULARITY;
   if (likely(bucket < jtr_histo_num_buckets)) {
     jtr_histo_buckets[bucket] ++;
@@ -288,11 +305,12 @@ void jtr_histo_print_summary(void)
 {
   snprintf(&jtr_results_buf[strlen(jtr_results_buf)],
            sizeof(jtr_results_buf) - strlen(jtr_results_buf),
-           "Minimum=%d, Maximum=%d, Average=%d, Overflows=%d\n",
+           "Minimum=%d, Maximum=%d, Average=%d, Overflows=%d, Neg_diffs=%d\n",
            jtr_histo_min_time,
            jtr_histo_max_time,
            jtr_histo_average,
-           jtr_histo_overflows);
+           jtr_histo_overflows,
+           jtr_neg_diffs);
   SYSE(jtr_results_buf[sizeof(jtr_results_buf)-2] != '\0'); /* Don't fill. */
 }  /* jtr_histo_print_summary */
 
@@ -384,11 +402,12 @@ void jtr_histo_gnuplot(char *title)
   /* Add summary to plot title. */
   snprintf(&gnuplot_title[strlen(gnuplot_title)],
            sizeof(gnuplot_title) - strlen(gnuplot_title),
-           "\\nMinimum=%d, Maximum=%d, Average=%d, Overflows=%d",
+           "\\nMinimum=%d, Maximum=%d, Average=%d, Overflows=%d, Neg_diffs=%d",
            jtr_histo_min_time,
            jtr_histo_max_time,
            jtr_histo_average,
-           jtr_histo_overflows);
+           jtr_histo_overflows,
+           jtr_neg_diffs);
 
   /* Set gnuplot variables according to the test run parameters. */
   jtr_png_filenum ++;
@@ -454,60 +473,84 @@ int jtr_busy_loop_wait_count(long long wait_ns)
 }  /* jtr_busy_loop_wait_count */
 
 
-/* Main measurement loop. */
-void jtr_measure_calls(int warmup_loops, int measure_loops,
-                       int post_call_wait_ns, int timebase,
-                       app_cb_t app_cb, void *clientd)
+void jtr_measure_one(int timebase, int accum,
+                     app_cb_t app_cb, void *clientd)
 {
   uint32_t start_ticks_hi, start_ticks_lo;
   uint32_t end_ticks_hi, end_ticks_lo;
-  long long start_ticks;
-  long long end_ticks;
-  long long diff_ticks;
   struct timespec start_ts;  /* tv_sec, tv_nsec */
   struct timespec end_ts;  /* tv_sec, tv_nsec */
   long long start_ns;
   long long end_ns;
   long long diff_ns;
+  long long start_ticks;
+  long long end_ticks;
+  long long diff_ticks;
+
+  if (timebase == 1) {
+    /* Make sure timestamp memory is in cache. */
+    RDTSC(start_ticks_hi, start_ticks_lo);
+    RDTSC(end_ticks_hi, end_ticks_lo);
+    RDTSC(start_ticks_hi, start_ticks_lo);
+    RDTSC(end_ticks_hi, end_ticks_lo);
+
+    RDTSC(start_ticks_hi, start_ticks_lo);
+    app_cb(clientd);
+    RDTSC(end_ticks_hi, end_ticks_lo);
+
+    start_ticks = ((long long)start_ticks_hi << 32) + (long long)start_ticks_lo;
+    end_ticks = ((long long)end_ticks_hi << 32) + (long long)end_ticks_lo;
+
+    diff_ticks = end_ticks - start_ticks;  /* start-to-finish */
+    diff_ns = (diff_ticks * NANOS_PER_SEC) / jtr_ticks_per_sec;
+    diff_ns -= jtr_rdtsc_cost;  /* Correct for measurement cost. */
+  }
+  else {  /* alternate timebase */
+    /* Make sure timestamp memory is in cache. */
+    clock_gettime(CLOCK_MONOTONIC, &start_ts);
+    clock_gettime(CLOCK_MONOTONIC, &end_ts);
+    clock_gettime(CLOCK_MONOTONIC, &start_ts);
+    clock_gettime(CLOCK_MONOTONIC, &end_ts);
+
+    clock_gettime(CLOCK_MONOTONIC, &start_ts);
+    app_cb(clientd);
+    clock_gettime(CLOCK_MONOTONIC, &end_ts);
+    start_ns = ((long long)start_ts.tv_sec * NANOS_PER_SEC)
+               + (long long)start_ts.tv_nsec;
+    end_ns = ((long long)end_ts.tv_sec * NANOS_PER_SEC)
+             + (long long)end_ts.tv_nsec;
+    diff_ns = end_ns - start_ns;
+    diff_ns -= jtr_gettime_cost;  /* Correct measurement cost. */
+  }
+
+  if (accum) {
+    if (unlikely(diff_ns < 0)) {
+      jtr_neg_diffs ++;
+      diff_ns = 0;
+    }
+
+    jtr_histo_accum(diff_ns);
+  }  /* if accum */
+}  /* jtr_measure_one */
+
+
+/* Main measurement loop. */
+void jtr_measure_calls(int warmup_loops, int measure_loops,
+                       int post_call_wait_ns, int timebase,
+                       app_cb_t app_cb, void *clientd)
+{
   int i;
 
   /* Use negative values for "i" as warm-up loops. */
   for (i = -warmup_loops; i < measure_loops; i++) {
-    if (likely(timebase == 1)) {
-      RDTSC(start_ticks_hi, start_ticks_lo);
-      app_cb(clientd);
-      RDTSC(end_ticks_hi, end_ticks_lo);
+    jtr_measure_one(timebase, (i >= 0),
+                    app_cb, clientd);
 
-      start_ticks = ((long long)start_ticks_hi << 32) + (long long)start_ticks_lo;
-      end_ticks = ((long long)end_ticks_hi << 32) + (long long)end_ticks_lo;
-      diff_ticks = end_ticks - start_ticks;
-      diff_ns = (diff_ticks * NANOS_PER_SEC) / jtr_ticks_per_sec;
-      diff_ns -= jtr_rdtsc_cost;  /* Correct for measurement cost. */
-    }  /* timebase == 1 */
-    else {
-      clock_gettime(CLOCK_MONOTONIC, &start_ts);
-      app_cb(clientd);
-      clock_gettime(CLOCK_MONOTONIC, &end_ts);
-      start_ns = ((long long)start_ts.tv_sec * NANOS_PER_SEC)
-                 + (long long)start_ts.tv_nsec;
-      end_ns = ((long long)end_ts.tv_sec * NANOS_PER_SEC)
-               + (long long)end_ts.tv_nsec;
-      diff_ns = end_ns - start_ns;
-      diff_ns -= jtr_gettime_cost;  /* Correct measurement cost. */
-    }
-
-    if (unlikely(diff_ns < 0)) {
-      diff_ns = 0;
-    }
-
+    /* Pause between calls. */
     if (likely(post_call_wait_ns >= 0)) {
       jtr_spin_sleep_ns(post_call_wait_ns, timebase);
     } else {
       usleep(-post_call_wait_ns/1000);
     }
-
-    if (likely(i >= 0)) {  /* Only accumulate results if past warmup period. */
-      jtr_histo_accum(diff_ns);
-    }  /* if i >= 0 */
   }
 }  /* jtr_measure_calls */
