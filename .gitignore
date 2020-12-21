@@ -1,5 +1,5 @@
 # UM-specific overhead files
-labbox.sh
+labbox.*
 lbm.lic
 *.png
 *.gp
